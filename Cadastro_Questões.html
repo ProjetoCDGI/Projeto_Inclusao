@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cadastro de Questão</title>
+  <link rel="stylesheet" href="../Css/Forms_03_07/Form_Questao.css">
+  <style>
+    .alternativas {
+      display: none;
+      flex-direction: column;
+    }
+    .alternativas input {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Cadastro de Questão</h1>
+  <form id="formQuestao">
+    <label>Texto da Questão:</label>
+    <textarea id="texto" required></textarea>
+
+    <label>Questão Adaptada</label>
+    <select id="Adaptação" required>
+      <option value="sim">Sim</option>
+      <option value="nao">Não</option>
+     
+    </select>
+
+    <label>Dificuldade:</label>
+    <select id="dificuldade" required>
+      <option value="">Selecione a dificuldade</option>
+      <option value="Facil">Fácil</option>
+      <option value="Medio">Médio</option>
+      <option value="Dificil">Difícil</option>
+    </select>
+
+    <label>Categoria:</label>
+    <select id="categoria" required>
+      <option value="">Selecione uma categoria</option>
+      <option value="matematica">Matematica</option>
+      <option value="biologia">Biologia</option>
+      <option value="historia">Historia</option>
+      <option value="geografia">Geografia</option>
+      <option value="portugues">Portugues</option>
+      <option value="ingles">Inglês</option>
+      <option value="educacaofisica">Educacao Fisica</option>
+      <option value="filosofia">Filosofia</option>
+      <option value="sociologia">Sociologia</option>
+      <option value="quimica">Quimica</option>
+      <option value="fisica">Fisica</option>
+      <option value="espanhol">Espanhol</option>
+      <option value="literatura">Literatura</option>
+      <option value="producaotextual">Producao Textual</option>
+    </select>
+
+    <label>Tipo de Questão:</label>
+    <select id="tipo_questao" required>
+      <option value="">Selecione o tipo</option>
+      <option value="discursiva">Discursiva</option>
+      <option value="multipla">Múltipla Escolha</option>
+      <option value="verdadeirofalso">Verdadeiro/Falso</option>
+    </select>
+
+    <div id="respostaDiscursiva">
+      <label>Resposta:</label>
+      <input type="text" id="resposta" />
+    </div>
+
+    <div id="respostaMultipla" class="alternativas">
+      <label>Alternativas:</label>
+      <input type="text" id="altA" placeholder="Alternativa A" />
+      <input type="text" id="altB" placeholder="Alternativa B" />
+      <input type="text" id="altC" placeholder="Alternativa C" />
+      <input type="text" id="altD" placeholder="Alternativa D" />
+      <label>Alternativa Correta:</label>
+      <select id="correta">
+        <option value="">Selecione a correta</option>
+        <option value="A">A</option>
+        <option value="B">B</option>
+        <option value="C">C</option>
+        <option value="D">D</option>
+      </select>
+    </div>
+
+    <div id="respostaVerdadeirofalso" class="veracidade">
+      <label>O fato é:</label>
+      <select id="veracidade">
+        <option value="Verdadeiro">Verdadeiro</option>
+        <option value="Falso">Falso</option>
+      </select>
+    </div>  
+
+    <button type="submit">Salvar Questão</button>
+  </form>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBjA7mXUmX_QI7yQk_crxkvFHg2-L655GY",
+      authDomain: "tccinclusao-498a0.firebaseapp.com",
+      databaseURL: "https://tccinclusao-498a0-default-rtdb.firebaseio.com",
+      projectId: "tccinclusao-498a0",
+      storageBucket: "tccinclusao-498a0.appspot.com",
+      messagingSenderId: "320924149985",
+      appId: "1:320924149985:web:96149363a35cdeba4dafa0"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    auth.onAuthStateChanged(async user => {
+      if (user) {
+        const snapshot = await db.ref('usuarios/' + user.uid).once('value');
+        const dados = snapshot.val();
+        if (dados.tipo !== 'professor') {
+          alert("Acesso restrito a professores.");
+          window.location.href = 'View_Questão.html';
+        }
+      } else {
+        window.location.href = 'Login_Inclusão.html';
+      }
+    });
+
+    const tipoSelect = document.getElementById("tipo_questao");
+    const respostaDiscursiva = document.getElementById("respostaDiscursiva");
+    const respostaMultipla = document.getElementById("respostaMultipla");
+    const respostaVerdadeirofalso = document.getElementById("respostaVerdadeirofalso");
+
+    tipoSelect.addEventListener("change", () => {
+      if (tipoSelect.value === "multipla") {
+        respostaDiscursiva.style.display = "none";
+        respostaMultipla.style.display = "flex";
+        respostaVerdadeirofalso.style.display = "none"
+      } else if (tipoSelect.value === "verdadeirofalso") {
+        respostaDiscursiva.style.display = "none";
+        respostaMultipla.style.display = "none"
+        respostaVerdadeirofalso.style.display = "flex";
+      } else if(tipoSelect.value === "discursiva") {
+        respostaDiscursiva.style.display = "block";
+        respostaMultipla.style.display = "none";
+        respostaVerdadeirofalso.style.display = "none"
+      } else {
+        respostaDiscursiva.style.display = "none";
+        respostaMultipla.style.display = "none";
+        respostaVerdadeirofalso.style.display = "none"
+      }
+    });
+
+    document.getElementById("formQuestao").addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      const texto = document.getElementById("texto").value;
+      const dificuldade = document.getElementById("dificuldade").value;
+      const categoriaKey = document.getElementById("categoria").value;
+      const tipoKey = document.getElementById("tipo_questao").value;
+      
+      const tiposQuestoes = {
+        "discursiva": "Discursiva",
+        "multipla": "Múltipla Escolha",
+        "verdadeirofalso": "Verdadeiro/Falso",
+        "associacao": "Associação",
+        "lacunas": "Preenchimento de Lacunas",
+        "ordenacao": "Ordenação",
+        "respostacurta": "Resposta Curta",
+        "correspondencia": "Correspondência",
+        "diagrama": "Diagrama",
+        "calculo": "Cálculo",
+        "relacionarcolunas": "Relacionar Colunas",
+        "respostalonga": "Resposta Longa"
+      };
+
+      // Garante que os nós independentes existem
+      await db.ref("categorias/" + categoriaKey).set({ nome: categoriaKey.charAt(0).toUpperCase() + categoriaKey.slice(1) });
+      await db.ref("tipos_questao/" + tipoKey).set({ nome: tiposQuestoes[tipoKey] || "Outro" });
+
+
+      let questao = {
+        Texto: texto,
+        Dificuldade: dificuldade,
+        Categoria: categoriaKey,
+        Tipo_Questao: tipoKey,
+        DataCadastro: new Date().toISOString()
+      };
+
+      if (tipoKey === "discursiva") {
+        questao.Resposta = document.getElementById("resposta").value;
+      } else if (tipoKey === "multipla"){
+        questao.Alternativas = {
+          A: document.getElementById("altA").value,
+          B: document.getElementById("altB").value,
+          C: document.getElementById("altC").value,
+          D: document.getElementById("altD").value
+        };
+        questao.Correta = document.getElementById("correta").value;
+      } else if (tipoKey === "verdadeirofalso") {
+        questao.Veracidade = document.getElementById("veracidade").value;
+        console.log("Veracidade selecionada:", veracidade.value);
+      }
+
+      //const novaRef = db.ref("questoes").push();
+      const novaRef = db.ref("questao").push();
+      novaRef.set(questao)
+        .then(() => {
+          alert("Questão salva com sucesso!");
+          window.location.href = "View_Questão.html";
+        })
+        .catch((error) => {
+          console.error("Erro ao salvar questão:", error);
+          alert("Erro: " + error.message);
+        });
+    });
+  </script>
+</body>
+</html>

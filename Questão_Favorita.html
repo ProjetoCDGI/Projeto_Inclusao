@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Favoritos</title>
+  <link rel="stylesheet" href="../Css/View questao/View_Questao.css">
+  <style>
+    /* Apenas estilos exclusivos ainda não cobertos no CSS externo */
+    button.favorito {
+      background-color: #ffe066;
+      border: none;
+      border-radius: 4px;
+      padding: 6px 12px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button.favorito:hover {
+      background-color: #ffd43b;
+    }
+    .sem-favoritos {
+      font-size: 18px;
+      color: #555;
+      text-align: center;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Questões Favoritas</h1>
+  <!-- Botão adaptativo -->
+  <button class="btn-voltar" onclick="goBack()">⬅ Voltar</button>
+  <div id="favoritasContainer">Carregando...</div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBjA7mXUmX_QI7yQk_crxkvFHg2-L655GY",
+      authDomain: "tccinclusao-498a0.firebaseapp.com",
+      databaseURL: "https://tccinclusao-498a0-default-rtdb.firebaseio.com",
+      projectId: "tccinclusao-498a0",
+      storageBucket: "tccinclusao-498a0.appspot.com",
+      messagingSenderId: "320924149985",
+      appId: "1:320924149985:web:96149363a35cdeba4dafa0"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+    const container = document.getElementById("favoritasContainer");
+
+    // Função para voltar para a página anterior
+    function goBack() {
+      window.history.back();
+    }
+
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        container.innerHTML = "<p class='sem-favoritos'>Você precisa estar logado para ver os favoritos.</p>";
+        return;
+      }
+
+      const uid = user.uid;
+
+      db.ref(`favoritos/${uid}`).once("value", favSnap => {
+        const favoritos = favSnap.val();
+        if (!favoritos) {
+          container.innerHTML = "<p class='sem-favoritos'>Sem questões favoritadas ainda.</p>";
+          return;
+        }
+
+        Object.keys(favoritos).forEach(id => {
+          db.ref("questao/" + id).once("value", snap => {
+            const questao = snap.val();
+            if (!questao) return;
+
+            const div = document.createElement("div");
+            div.classList.add("questao");
+            div.innerHTML = `
+              <h3>ID: ${id}</h3>
+              <p><strong>Texto:</strong> ${questao.Texto}</p>
+              <p><strong>Categoria:</strong> ${questao.Categoria}</p>
+              <p><strong>Dificuldade:</strong> ${questao.Dificuldade}</p>
+              <p><strong>Tipo:</strong> ${questao.Tipo_Questao}</p>
+            `;
+
+            container.appendChild(div);
+          });
+        });
+      });
+    });
+  </script>
+</body>
+</html>
