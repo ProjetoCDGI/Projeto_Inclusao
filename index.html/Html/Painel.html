@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel do Usuário</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #74ebd5, #ACB6E5);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+    }
+    .painel-container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+      max-width: 600px;
+      width: 100%;
+    }
+    h1, h2 {
+      color: #333;
+      margin-bottom: 15px;
+    }
+    #spinnerName {
+      width: 24px; height: 24px;
+      border: 4px solid #ccc;
+      border-top-color: #007bff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .botoes {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 30px;
+      flex-wrap: wrap;
+    }
+    .acao {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 180px;
+      transition: transform 0.3s ease;
+    }
+    .acao:hover {
+      transform: scale(1.05);
+    }
+    .acao img {
+      width: 100px;
+      height: 100px;
+      margin-bottom: 15px;
+    }
+    .acao button {
+      background-color: #007bff;
+      color: white;
+      border: 2px solid #007bff;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    .acao button:hover {
+      background-color: #0056b3;
+      color: #fff;
+    }
+    .acao.logout button:hover {
+      background-color: #dc3545;
+      border-color: #dc3545;
+    }
+    @media (max-width: 600px) {
+      .acao { width: 100%; }
+      .painel-container { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="painel-container">
+    <h1>Olá, <span id="nomeUsuario">usuário</span>! <span id="spinnerName"></span></h1>
+    <h2>O que deseja fazer?</h2>
+    <div class="botoes">
+      <div class="acao">
+        <img src="https://cdn-icons-png.flaticon.com/512/1828/1828919.png" alt="Criar questão" />
+        <button onclick="location.href='Cadastro_Questões.html'">Criar questão</button>
+      </div>
+      <div class="acao">
+        <img src="https://cdn-icons-png.flaticon.com/512/709/709496.png" alt="Visualizar questões" />
+        <button onclick="location.href='View_Questão.html'">Visualizar questões</button>
+      </div>
+      <div class="acao logout">
+        <img src="https://cdn-icons-png.flaticon.com/512/1828/1828427.png" alt="Logout" />
+        <button id="logoutBtn" onclick="location.href='Login_Inclusão.html'">Sair</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = { 
+      apiKey: "AIzaSyBjA7mXUmX_QI7yQk_crxkvFHg2-L655GY",
+      authDomain: "tccinclusao-498a0.firebaseapp.com",
+      databaseURL: "https://tccinclusao-498a0-default-rtdb.firebaseio.com",
+      projectId: "tccinclusao-498a0",
+      storageBucket: "tccinclusao-498a0.appspot.com",
+      messagingSenderId: "320924149985",
+      appId: "1:320924149985:web:96149363a35cdeba4dafa0" };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    const nomeEl = document.getElementById('nomeUsuario');
+    const spinnerEl = document.getElementById('spinnerName');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    auth.onAuthStateChanged(async user => {
+      if (!user) {
+        return location.href = 'Login_Inclusão.html';
+      }
+      try {
+        const snap = await db.ref('usuarios/' + user.uid + '/nome').once('value');
+        const nome = snap.val();
+        nomeEl.textContent = nome || 'usuário';
+      } catch (e) {
+        console.error('Erro ao buscar nome:', e);
+      } finally {
+        spinnerEl.style.display = 'none';
+      }
+    });
+
+    logoutBtn.addEventListener('click', async () => {
+      await auth.signOut();
+      location.href = 'Login_Inclusão.html';
+    });
+  </script>
+
+</body>
+</html>

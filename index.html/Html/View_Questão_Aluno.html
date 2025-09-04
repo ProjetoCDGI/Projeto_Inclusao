@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Visualizar Questões</title>
+  <link rel="stylesheet" href="../Css/View questao/View_Questao.css">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tinos:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@300..800&display=swap" rel="stylesheet">
+  <style>
+    /* Apenas estilos exclusivos ainda não cobertos no CSS externo */
+    button.favorito {
+      background-color: #ffe066;
+      border: none;
+      border-radius: 4px;
+      padding: 6px 12px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button.favorito:hover {
+      background-color: #ffd43b;
+    }
+    .sem-favoritos {
+      font-size: 18px;
+      color: #555;
+      text-align: center;
+      margin-top: 40px;
+    } .sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 70px;
+  height: 100%;
+  background-color: #007bff;
+  transition: width 0.3s ease;
+  overflow-x: hidden;
+  padding-top: 20px;
+  z-index: 1000;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+}
+
+.sidebar.expanded {
+  width: 220px;
+}
+
+.sidebar .toggle-btn {
+  background-color: transparent;
+  color: #fff;
+  border: none;
+  font-size: 28px;
+  margin-left: 10px;
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+
+.sidebar .toggle-btn:hover {
+  transform: scale(1.2);
+}
+
+.sidebar-content {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding-left: 10px;
+}
+
+.sidebar-content button {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 17px;
+  margin-bottom: 15px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.sidebar-content button:hover {
+  background-color: rgba(255,255,255,0.1);
+}
+
+.sidebar-content .btn-text {
+  margin-left: 12px;
+  display: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar.expanded .btn-text {
+  display: inline;
+  opacity: 1;
+}
+#main {
+  margin-left: 70px;
+  padding: 20px;
+  transition: margin-left 0.3s ease;
+}
+
+.sidebar.expanded ~ #main {
+  margin-left: 220px;
+}
+
+  </style>
+</head>
+<body>
+  <div id="sidebar" class="sidebar">
+  <button onclick="toggleSidebar()" class="toggle-btn">☰</button>
+  <div class="sidebar-content">
+    <button onclick="window.location.href='Questão_Favorita.html'">
+      ⭐ <span class="btn-text">Favoritas</span>
+    </button>
+    <button onclick="window.location.href='Perfil.html'">
+      👤 <span class="btn-text">Perfil</span>
+    </button>
+    <button onclick="window.location.replace('Login_Inclusão.html')">
+      🚪 <span class="btn-text">Sair</span>
+    </button>
+  </div>
+</div>
+<div id="main">
+  <h1 class="titulo">Questões Cadastradas</h1>
+  
+  <div id="listaQuestoes">Carregando questões...</div>
+</div>
+
+  <h1 class="titulo">Questões Cadastradas</h1>
+  <div id="listaQuestoes">Carregando questões...</div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+
+  <script>
+   const firebaseConfig = {
+  apiKey: "AIzaSyBjA7mXUmX_QI7yQk_crxkvFHg2-L655GY",
+  authDomain: "tccinclusao-498a0.firebaseapp.com",
+  databaseURL: "https://tccinclusao-498a0-default-rtdb.firebaseio.com",
+  projectId: "tccinclusao-498a0",
+  storageBucket: "tccinclusao-498a0.appspot.com",
+  messagingSenderId: "320924149985",
+  appId: "1:320924149985:web:96149363a35cdeba4dafa0"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const auth = firebase.auth();
+const listaQuestoes = document.getElementById("listaQuestoes");
+
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  sidebar.classList.toggle('expanded');
+}
+
+function normalizar(str) {
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+function favoritarQuestao(uid, id) {
+  db.ref(`favoritos/${uid}/${id}`).set(true);
+}
+
+function desfavoritarQuestao(uid, id) {
+  db.ref(`favoritos/${uid}/${id}`).remove();
+}
+
+function toggleFavorito(uid, id, btn) {
+  const ref = db.ref(`favoritos/${uid}/${id}`);
+  ref.once("value", snap => {
+    if (snap.exists()) {
+      desfavoritarQuestao(uid, id);
+      btn.textContent = "⭐ Favoritar";
+    } else {
+      favoritarQuestao(uid, id);
+      btn.textContent = "⭐ Desfavoritar";
+    }
+  });
+}
+
+auth.onAuthStateChanged(user => {
+  if (!user) {
+    alert("Você precisa estar logado para ver e favoritar questões.");
+    return;
+  }
+
+  const uid = user.uid;
+
+  db.ref("questao").on("value", async (snapshot) => {
+    const data = snapshot.val();
+    listaQuestoes.innerHTML = "";
+
+    const favSnap = await db.ref(`favoritos/${uid}`).once("value");
+    const favoritos = favSnap.val() || {};
+
+    if (!data) {
+      listaQuestoes.innerHTML = "<p>Nenhuma questão encontrada.</p>";
+      return;
+    }
+
+    Object.entries(data).forEach(([id, questao]) => {
+      if (questao.Oculto === true) return;
+
+      const div = document.createElement("div");
+      div.classList.add("questao");
+
+      let html = `
+        <h3>ID: ${id}</h3>
+        <p><strong>Texto:</strong> ${questao.Texto}</p>
+        <p><strong>Dificuldade:</strong> ${questao.Dificuldade}</p>
+        <p><strong>Categoria:</strong> ${questao.Categoria}</p>
+        <p><strong>Tipo:</strong> ${questao.Tipo_Questao}</p>
+      `;
+
+      if (questao.Tipo_Questao === "MultiplaEscolha" && questao.Alternativas) {
+        html += `<p><strong>Alternativas:</strong></p>`;
+        for (const [letra, texto] of Object.entries(questao.Alternativas)) {
+          const isCorreta = letra === questao.Correta;
+          html += `<p class="${isCorreta ? 'alternativa-correta' : ''}">${letra}) ${texto}</p>`;
+        }
+        html += `<p><strong>Correta:</strong> ${questao.Correta}</p>`;
+      } else if (questao.Tipo_Questao === "Verdadeiro/Falso") {
+        html += `<p><strong>Veracidade:</strong> ${questao.Veracidade}</p>`;
+      } else {
+        html += `<p><strong>Resposta:</strong> ${questao.Resposta}</p>`;
+      }
+
+      html += `<p><strong>Data:</strong> ${questao.DataCadastro || "N/A"}</p>`;
+
+      div.innerHTML = html;
+
+      const btn = document.createElement("button");
+      btn.classList.add("favorito");
+      btn.textContent = favoritos[id] ? "⭐ Desfavoritar" : "⭐ Favoritar";
+      btn.onclick = () => toggleFavorito(uid, id, btn);
+
+      div.appendChild(btn);
+      listaQuestoes.appendChild(div);
+    });
+  });
+});
+
+document.getElementById("btnFavoritos").onclick = () => {
+  window.location.href = "Questão_Favorita.html";
+};
+
+
+  </script>
+</body>
+</html>

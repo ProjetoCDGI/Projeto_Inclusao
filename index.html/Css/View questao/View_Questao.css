@@ -1,0 +1,123 @@
+/* === ESTILOS GERAIS PARA PROFESSOR E ALUNO === */
+
+body {
+  font-family: 'Tinos', sans-serif;
+  background: linear-gradient(to right, #74ebd5, #ACB6E5);
+  padding: 40px 20px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.titulo {
+  font-family: "Funnel Display", sans-serif;
+}
+
+
+#main {
+  margin-left: 70px; /* Largura da sidebar compacta */
+  transition: margin-left 0.3s ease;
+  padding: 20px;
+}
+
+.sidebar.expanded ~ #main {
+  margin-left: 220px; /* Largura da sidebar expandida */
+}
+
+#btnFavoritos {
+  background-color: #74c0fc;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  font-size: 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+#btnFavoritos:hover {
+  background-color: #4dabf7;
+}
+
+/* Título */
+h1 {
+  color: #333;
+  margin-bottom: 20px;
+}
+
+/* Contêiner das questões */
+#listaQuestoes {
+  width: 100%;
+  max-width: 800px;
+}
+
+/* Estilo base de cada questão */
+.questao {
+  background-color: white;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+  border-left: 6px solid #ccc;
+}
+
+.questao:hover {
+  transform: scale(1.01);
+}
+
+.questao h3 {
+  margin-top: 0;
+  color: #007bff;
+}
+
+.questao p {
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+.veracidade {
+  display: none;
+  flex-direction: column;
+  margin-top: 10px;
+}
+
+/* Destacar a alternativa correta */
+.alternativa-correta {
+  font-weight: bold;
+  color: green;
+}
+
+/* Botão "Nova Questão" (só aparece para professor, mas o estilo fica aqui) */
+.novo {
+  margin-bottom: 20px;
+  padding: 10px 20px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.tinos-regular {
+  font-family: "Tinos", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+
+.novo:hover {
+  background-color: #218838;
+}
+
+/* === CORES POR CATEGORIA === */
+.cat-matematica { border-left-color: #007bff; }
+.cat-ciencias   { border-left-color: #28a745; }
+.cat-historia   { border-left-color: #ffc107; }
+.cat-geografia  { border-left-color: #17a2b8; }
+.cat-portugues  { border-left-color: #e83e8c; }
+
+/* === CORES POR DIFICULDADE === */
+.dif-facil   { background-color: #e6ffed; }
+.dif-medio   { background-color: #fff8e1; }
+.dif-dificil { background-color: #ffe6e6; }

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #74ebd5, #ACB6E5);
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 20px;
+    }
+    form {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    label { margin-top: 12px; font-weight: bold; }
+    input, button {
+      margin-top: 5px;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: 2px solid #007bff;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 20px;
+    }
+    button:hover:not(:disabled) {
+      background-color: white;
+      color: #007bff;
+    }
+    button:disabled {
+      background-color: #aaa;
+      border-color: #aaa;
+      cursor: default;
+    }
+    .show-password {
+      margin-top: -8px;
+      font-size: 14px;
+    }
+    .error {
+      color: #d9534f;
+      font-size: 14px;
+      margin-top: 5px;
+      min-height: 18px;
+    }
+    #loadingSpinner {
+      display: none;
+      margin-top: 10px;
+      text-align: center;
+    }
+    .spinner {
+      width: 30px;
+      height: 30px;
+      border: 4px solid #ccc;
+      border-top: 4px solid #007bff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (max-width: 450px) {
+      form { padding: 20px; }
+      h1 { font-size: 1.4em; }
+    }
+    #cadastroBtn {
+  background-color: #007bff;
+  color: white;
+  border: 2px solid #007bff;
+  margin-top: 10px;
+}
+#cadastroBtn:hover {
+  background-color: white;
+  color: #007bff;
+}
+
+  </style>
+</head>
+<body>
+  <form id="loginForm" novalidate>
+    <h1>Login</h1>
+
+    <label for="email">Email</label>
+    <input type="email" id="email" autocomplete="email" required>
+    <div class="error" id="error-email"></div>
+
+    <label for="senha">Senha</label>
+    <input type="password" id="senha" autocomplete="current-password" required>
+    <div class="error" id="error-senha"></div>
+
+    <label class="show-password">
+      <input type="checkbox" id="mostrarSenha"> Mostrar senha
+    </label>
+
+    <button type="submit" id="entrarBtn">Entrar</button>
+    <button type="button" id="cadastroBtn">Cadastrar-se</button>
+
+
+    <div id="loadingSpinner">
+      <div class="spinner"></div>
+    </div>
+  </form>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <script>
+    // Config Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyBjA7mXUmX_QI7yQk_crxkvFHg2-L655GY",
+      authDomain: "tccinclusao-498a0.firebaseapp.com",
+      databaseURL: "https://tccinclusao-498a0-default-rtdb.firebaseio.com",
+      projectId: "tccinclusao-498a0",
+      storageBucket: "tccinclusao-498a0.appspot.com",
+      messagingSenderId: "320924149985",
+      appId: "1:320924149985:web:96149363a35cdeba4dafa0"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    // Elementos DOM
+    const form = document.getElementById('loginForm');
+    const emailInput = document.getElementById('email');
+    const senhaInput = document.getElementById('senha');
+    const mostrarSenha = document.getElementById('mostrarSenha');
+    const btn = document.getElementById('entrarBtn');
+    const spinnerDiv = document.getElementById('loadingSpinner');
+    const errEmail = document.getElementById('error-email');
+    const errSenha = document.getElementById('error-senha');
+
+    // Mostrar / ocultar senha
+    mostrarSenha.addEventListener('change', () => {
+      senhaInput.type = mostrarSenha.checked ? 'text' : 'password';
+    });
+
+    function clearErrors() {
+      errEmail.textContent = '';
+      errSenha.textContent = '';
+    }
+
+    function showError(el, msg) {
+      el.textContent = msg;
+    }
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      clearErrors();
+
+      const email = emailInput.value.trim();
+      const senha = senhaInput.value.trim();
+      let valid = true;
+
+      if (!email) {
+        showError(errEmail, 'Informe seu email');
+        valid = false;
+      }
+
+
+      if (!senha){
+        showError(errSenha, 'Informe sua senha');
+        valid = false;
+      }
+      if (!valid) return;
+
+      // Desabilita botão e mostra spinner
+      btn.disabled = true;
+      spinnerDiv.style.display = 'block';
+
+      try {
+        const cred = await auth.signInWithEmailAndPassword(email, senha);
+        const uid = cred.user.uid;
+
+        const snapshot = await db.ref('usuarios/' + uid).once('value');
+        const dados = snapshot.val();
+
+        if (!dados || !dados.tipo) {
+          showError(errEmail, 'Tipo de usuário não encontrado');
+          throw new Error('Tipo não encontrado');
+        }
+
+        // Salva tipo
+        await db.ref('usuarios/' + uid + '/tipo').set(dados.tipo);
+        localStorage.setItem('tipoUsuario', dados.tipo);
+
+        setTimeout(() => {
+          window.location.href = dados.tipo === 'professor'
+            ? 'Painel.html'
+            : 'View_Questão_Aluno.html';
+        }, 30);
+
+        
+      } catch (err) {
+        const msg = err.message.toLowerCase();
+        if (msg.includes('password')) {
+          showError(errSenha, 'Senha incorreta');
+        } else if (msg.includes('user') || msg.includes('no user')) {
+          showError(errEmail, 'Usuário não encontrado');
+        } else {
+          alert('Erro ao fazer login: ' + err.message);
+        }
+      } finally {
+        btn.disabled = false;
+        spinnerDiv.style.display = 'none';
+      }
+    });
+    const cadastroBtn = document.getElementById('cadastroBtn');
+cadastroBtn.addEventListener('click', () => {
+  window.location.href = 'Cadastro_Usuário.html';
+});
+
+  </script>
+</body>
+</html>
