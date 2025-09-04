@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Editar Questão</title>
+  <link rel="stylesheet" href="../Css/Forms_03_07/Form_Questao.css">
+  <style>
+    .alternativas {
+      display: none;
+      flex-direction: column;
+    }
+
+    .alternativas input {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Editar Questão</h1>
+  <form id="formEditar">
+    <label>Texto da Questão:</label>
+    <textarea id="texto" required></textarea>
+
+    <label>Dificuldade:</label>
+    <select id="dificuldade" required>
+      <option value="Fácil">Fácil</option>
+      <option value="Médio">Médio</option>
+      <option value="Difícil">Difícil</option>
+    </select>
+
+    <label>Categoria:</label>
+    <select id="categoria" required>
+      <option value="Matemática">Matemática</option>
+      <option value="Ciências">Ciências</option>
+      <option value="História">História</option>
+      <option value="Geografia">Geografia</option>
+      <option value="Português">Português</option>
+      <option value="Inglês">Inglês</option>
+      <option value="Educacao física">Educação Física</option>
+      <option value="Filosofia">Filosofia</option>
+      <option value="Sociologia">Sociologia</option>
+      <option value="Química">Quimica</option>
+      <option value="Física">Fisica</option>
+      <option value="Espanhol">Espanhol</option>
+      <option value="Literatura">Literatura</option>
+      <option value="Produção textual">Produção Textual</option>
+    </select>
+
+    <label>Tipo de Questão:</label>
+    <select id="tipo_questao" required>
+      <option value="Discursiva">Discursiva</option>
+      <option value="Múltipla Escolha">Múltipla Escolha</option>
+      <option value="Verdadeiro ou Falso">Verdadeiro ou Falso</option>
+    </select>
+
+    <div id="respostaDiscursiva">
+      <label>Resposta:</label>
+      <input type="text" id="resposta" />
+    </div>
+
+    <div id="respostaMultipla" class="alternativas">
+      <label>Alternativas:</label>
+      <input type="text" id="altA" placeholder="Alternativa A" />
+      <input type="text" id="altB" placeholder="Alternativa B" />
+      <input type="text" id="altC" placeholder="Alternativa C" />
+      <input type="text" id="altD" placeholder="Alternativa D" />
+      <label>Alternativa Correta:</label>
+      <select id="correta">
+        <option value="A">A</option>
+        <option value="B">B</option>
+        <option value="C">C</option>
+        <option value="D">D</option>
+      </select>
+    </div>
+
+    <button type="submit">Salvar Alterações</button>
+  </form>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBjA7mXUmX_QI7yQk_crxkvFHg2-L655GY",
+      authDomain: "tccinclusao-498a0.firebaseapp.com",
+      databaseURL: "https://tccinclusao-498a0-default-rtdb.firebaseio.com",
+      projectId: "tccinclusao-498a0",
+      storageBucket: "tccinclusao-498a0.appspot.com",
+      messagingSenderId: "320924149985",
+      appId: "1:320924149985:web:96149363a35cdeba4dafa0"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const questaoId = urlParams.get("id");
+
+    const tipoSelect = document.getElementById("tipo_questao");
+    const respostaDiscursiva = document.getElementById("respostaDiscursiva");
+    const respostaMultipla = document.getElementById("respostaMultipla");
+
+    tipoSelect.addEventListener("change", () => {
+      if (tipoSelect.value === "MultiplaEscolha") {
+        respostaDiscursiva.style.display = "none";
+        respostaMultipla.style.display = "flex";
+      } else {
+        respostaDiscursiva.style.display = "block";
+        respostaMultipla.style.display = "none";
+      }
+    });
+
+    // Carrega dados da questão
+    db.ref("questao/" + questaoId).once("value").then(snapshot => {
+      const q = snapshot.val();
+      if (!q) return alert("Questão não encontrada.");
+
+      document.getElementById("texto").value = q.Texto;
+      document.getElementById("dificuldade").value = q.Dificuldade;
+      document.getElementById("categoria").value = q.Categoria;
+      tipoSelect.value = q.Tipo_Questao;
+      tipoSelect.dispatchEvent(new Event("change"));
+
+      if (q.Tipo_Questao === "Discursiva") {
+        document.getElementById("resposta").value = q.Resposta || "";
+      } else if (q.Tipo_Questao === "Múltipla Escolha") {
+        document.getElementById("altA").value = q.Alternativas?.A || "";
+        document.getElementById("altB").value = q.Alternativas?.B || "";
+        document.getElementById("altC").value = q.Alternativas?.C || "";
+        document.getElementById("altD").value = q.Alternativas?.D || "";
+        document.getElementById("correta").value = q.Correta || "";
+      } else if (q.Tipo_Questao === "Verdadeiro ou Falso"){
+        
+      }
+    });
+
+    document.getElementById("formEditar").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const texto = document.getElementById("texto").value;
+      const dificuldade = document.getElementById("dificuldade").value;
+      const categoria = document.getElementById("categoria").value;
+      const tipo = tipoSelect.value;
+
+      let atualizacao = {
+        Texto: texto,
+        Dificuldade: dificuldade,
+        Categoria: categoria,
+        Tipo_Questao: tipo
+      };
+
+      if (tipo === "Discursiva") {
+        atualizacao.Resposta = document.getElementById("resposta").value;
+        atualizacao.Alternativas = null;
+        atualizacao.Correta = null;
+      } else {
+        atualizacao.Alternativas = {
+          A: document.getElementById("altA").value,
+          B: document.getElementById("altB").value,
+          C: document.getElementById("altC").value,
+          D: document.getElementById("altD").value
+        };
+        atualizacao.Correta = document.getElementById("correta").value;
+        atualizacao.Resposta = null;
+      }
+
+      db.ref("questao/" + questaoId).update(atualizacao)
+        .then(() => {
+          alert("Questão atualizada com sucesso!");
+          window.location.href = "View_Questão.html";
+        })
+        .catch(error => {
+          console.error("Erro ao atualizar:", error);
+          alert("Erro: " + error.message);
+        });
+    });
+  </script>
+</body>
+</html>
